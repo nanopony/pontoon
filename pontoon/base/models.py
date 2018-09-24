@@ -2856,8 +2856,8 @@ class TranslationMemoryEntryManager(models.Manager):
         min_dist = math.ceil(max(length * min_quality, 2))
         max_dist = math.floor(min(length / min_quality, 1000))
         levenshtein_ratio_equation = """(
-            (char_length(source) + char_length(%s) - levenshtein(source, %s, 1, 2, 2))::float /
-            (char_length(source) + char_length(%s))
+            (char_length(LEFT(source, 255) + char_length(LEFT(%s, 255) - levenshtein(LEFT(source, 255), LEFT(%s, 255), 1, 2, 2))::float /
+            (char_length(LEFT(source, 255) + char_length(LEFT(%s, 255))
         )"""
 
         # Only check entities with similar length

@@ -157,6 +157,57 @@ def test_view_tm_best_quality_entry(
         }]
     )
 
+@pytest.mark.django_db
+def test_view_tm_best_quality_entry_long_line(
+    client,
+    locale_a,
+    resource_a,
+):
+    """
+    Translation memory should return results entries aggregated by
+    translation string.
+    """
+    entities = [
+        EntityFactory(resource=resource_a, string='Entity %s' % i + 'long_' * 30, order=i)
+        for i in range(3)
+    ]
+    tm = TranslationMemoryFactory.create(
+        entity=entities[0],
+        source="a" * 260,
+        target="c" * 260,
+        locale=locale_a,
+    )
+    TranslationMemoryFactory.create(
+        entity=entities[1],
+        source="a" * 260,
+        target="d" * 260,
+        locale=locale_a,
+    )
+    TranslationMemoryFactory.create(
+        entity=entities[2],
+        source="b" * 260,
+        target="c" * 260,
+        locale=locale_a,
+    )
+    response = client.get(
+        '/translation-memory/',
+        {
+            'text': 'a'* 260,
+            'pk': tm.entity.pk,
+            'locale': locale_a.code,
+        }
+    )
+    assert response.status_code == 200
+    assert (
+        json.loads(response.content)
+        == [{
+            "count": 1,
+            "source": "a" * 260,
+            "quality": 100.0,
+            "target": "d" * 260,
+        }]
+    )
+
 
 @pytest.mark.django_db
 def test_view_tm_translation_counts(
